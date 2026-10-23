@@ -1,0 +1,168 @@
+#include <iostream>
+#include <stdexcept>
+#include <string>
+using namespace std;
+
+class BankException : public exception
+{
+protected:
+    string message;
+
+public:
+    BankException(string msg)
+    {
+        message = msg;
+    }
+
+    const char* what() const noexcept override
+    {
+        return message.c_str();
+    }
+};
+
+class InsufficientFundsException : public BankException
+{
+public:
+    InsufficientFundsException()
+        : BankException("Error: Insufficient balance for withdrawal.")
+    {
+    }
+};
+
+class InvalidAmountException : public BankException
+{
+public:
+    InvalidAmountException()
+        : BankException("Error: Amount must be greater than zero.")
+    {
+    }
+};
+
+class BankAccount
+{
+private:
+    string name;
+    double balance;
+
+public:
+    BankAccount(string n, double b)
+    {
+        name = n;
+        balance = b;
+    }
+
+    void deposit(double amount)
+    {
+        if (amount <= 0)
+            throw InvalidAmountException();
+
+        balance += amount;
+    }
+
+    void withdraw(double amount)
+    {
+        if (amount <= 0)
+            throw InvalidAmountException();
+
+        if (amount > balance)
+            throw InsufficientFundsException();
+
+        balance -= amount;
+    }
+
+    void display()
+    {
+        cout << "Account Holder: " << name << endl;
+        cout << "Balance: Rs. " << balance << endl;
+    }
+};
+
+int main()
+{
+    string accountHolder;
+    double initialBalance;
+
+    cout << "Enter account holder name: ";
+    getline(cin >> ws, accountHolder);
+
+    cout << "Enter initial balance: Rs. ";
+    if (!(cin >> initialBalance))
+    {
+        cout << "Invalid balance input.\n";
+        return 1;
+    }
+
+    BankAccount account(accountHolder, initialBalance);
+
+    cout << "\nInitial Account Details:" << endl;
+    account.display();
+
+    while (true)
+    {
+        int choice;
+
+        cout << "\n1. Deposit\n";
+        cout << "2. Withdraw\n";
+        cout << "0. Finish\n";
+        cout << "Enter your choice: ";
+
+        if (!(cin >> choice))
+        {
+            cout << "Invalid input.\n";
+            return 1;
+        }
+
+        if (choice == 0)
+            break;
+
+        if (choice != 1 && choice != 2)
+        {
+            cout << "Please enter 1, 2, or 0.\n";
+            continue;
+        }
+
+        double amount;
+        cout << "Enter amount: Rs. ";
+
+        if (!(cin >> amount))
+        {
+            cout << "Invalid amount input.\n";
+            return 1;
+        }
+
+        try
+        {
+            if (choice == 1)
+            {
+                account.deposit(amount);
+                cout << "Deposit successful.\n";
+            }
+            else
+            {
+                account.withdraw(amount);
+                cout << "Withdrawal successful.\n";
+            }
+        }
+        catch (const InsufficientFundsException& e)
+        {
+            cout << e.what() << endl;
+        }
+        catch (const InvalidAmountException& e)
+        {
+            cout << e.what() << endl;
+        }
+        catch (const BankException& e)
+        {
+            cout << "Bank Exception: " << e.what() << endl;
+        }
+        catch (const exception& e)
+        {
+            cout << "General Exception: " << e.what() << endl;
+        }
+    }
+
+    cout << "\nFinal Account Details:" << endl;
+    account.display();
+
+    return 0;
+}
